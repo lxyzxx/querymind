@@ -6,10 +6,9 @@ from pathlib import Path
 from typing import Any
 
 
-ROOT = Path(__file__).resolve().parents[3]
-PYTHON_ROOT = ROOT / "python"
-if str(PYTHON_ROOT) not in sys.path:
-    sys.path.insert(0, str(PYTHON_ROOT))
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 
 def _json_default(value: Any) -> str:
@@ -90,7 +89,7 @@ def build_agent(
     except ImportError as exc:
         raise RuntimeError(
             "LangChain agent dependencies are not installed. "
-            "Run: python3 -m pip install -r python/requirements-agent.txt"
+            "Run: python3 -m pip install -r requirements-agent.txt"
         ) from exc
 
     from querymind.agent.semantic_layer import parse_filters, parse_name_list
@@ -145,7 +144,7 @@ def build_agent(
         except ImportError as exc:
             raise RuntimeError(
                 "PostgreSQL dependency is not installed. "
-                "Run: python3 -m pip install -r python/requirements-agent.txt"
+                "Run: python3 -m pip install -r requirements-agent.txt"
             ) from exc
 
         def run_readonly_sql(sql: str, limit: int) -> str:
@@ -262,7 +261,7 @@ def main():
     )
     parser.add_argument(
         "--semantic-layer",
-        default=os.getenv("QUERYMIND_SEMANTIC_LAYER", "python/querymind/example/semantic_layer.yaml"),
+        default=os.getenv("QUERYMIND_SEMANTIC_LAYER", "querymind/example/semantic_layer.yaml"),
         help="YAML semantic layer file for governed metric queries.",
     )
     args = parser.parse_args()
@@ -290,4 +289,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

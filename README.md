@@ -56,9 +56,9 @@ LIMIT 20
 
 ```text
 docs/architecture.md                Design notes and roadmap
-python/querymind/agent/             Semantic layer and SQL compiler
-python/querymind/example/           Agent demo and semantic layer example
-python/tests/                       Unit tests
+querymind/agent/                    Semantic layer and SQL compiler
+querymind/example/                  Agent demo and semantic layer example
+tests/                              Unit tests
 ```
 
 ## Quick Start
@@ -66,14 +66,14 @@ python/tests/                       Unit tests
 Install dependencies:
 
 ```bash
-python3 -m pip install -r python/requirements.txt
-python3 -m pip install -r python/requirements-agent.txt
+python3 -m pip install -r requirements.txt
+python3 -m pip install -r requirements-agent.txt
 ```
 
 Run tests:
 
 ```bash
-PYTHONPATH=python python3 -m pytest python/tests
+python3 -m pytest tests
 ```
 
 Run the agent demo from the repository root:
@@ -81,7 +81,7 @@ Run the agent demo from the repository root:
 ```bash
 export DEEPSEEK_API_KEY=your_api_key
 
-python3 python/querymind/example/agent_demo.py \
+python3 querymind/example/agent_demo.py \
   "Generate SQL for active user count by status."
 ```
 
@@ -94,14 +94,14 @@ export QUERYMIND_PG_DATABASE=postgres
 export QUERYMIND_PG_USER=postgres
 export QUERYMIND_PG_PASSWORD=your_password
 
-python3 python/querymind/example/agent_demo.py \
+python3 querymind/example/agent_demo.py \
   --enable-pg \
-  --semantic-layer python/querymind/example/semantic_layer.yaml \
+  --semantic-layer querymind/example/semantic_layer.yaml \
   --print-trace \
   "按用户状态统计用户数，只看活跃用户"
 ```
 
-Before running against a real database, edit [semantic_layer.yaml](python/querymind/example/semantic_layer.yaml) to match your table and column names.
+Before running against a real database, edit [semantic_layer.yaml](querymind/example/semantic_layer.yaml) to match your table and column names.
 
 ## Design Notes
 
