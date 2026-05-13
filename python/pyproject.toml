@@ -5,23 +5,15 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "querymind"
 version = "0.1.0"
-description = "AI2SQL semantic layer runtime with Python tool execution"
+description = "Governed AI2SQL engine with a semantic layer and SQL guard"
 requires-python = ">=3.8"
 
 dependencies = [
-    "grpcio",
-    "grpcio-tools",
     "pyyaml"
 ]
 
 [tool.setuptools]
 packages = [
     "querymind",
-    "querymind.agent",
-    "querymind.client",
-    "querymind.server",
-    "querymind.generated"
+    "querymind.agent"
 ]
-
-[project.scripts]
-querymind-server = "querymind.server.main:main"
