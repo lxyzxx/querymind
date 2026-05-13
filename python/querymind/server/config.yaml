@@ -1,0 +1,13 @@
+server:
+  host: 0.0.0.0                   # gRPC server bind address
+  port: 50051                     # gRPC server port
+  grpc_max_workers: 10            # gRPC ThreadPoolExecutor workers
+
+scheduler:
+  num_workers: 10                 # number of Python runtime workers
+  idle_timeout_sec: 300           # session idle timeout (seconds)
+  max_life_timeout_sec: 3600      # session max lifetime (seconds)
+
+logging:
+#  log_file: querymind.log
+  level: DEBUG                     # DEBUG | INFO | WARNING | ERROR

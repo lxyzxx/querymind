@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package querymind.generated;
+
+// request message (as requested: OpenSessionReq)
+message OpenSessionReq {}
+
+// response message (OpenSessionResp) returning a session id string
+message OpenSessionResp {
+    string session_id = 1;
+}
+
+// request message for CloseSession including a session id
+message CloseSessionReq {
+    string session_id = 1;
+}
+
+// empty response for CloseSessionResp
+message CloseSessionResp {}
+
+// service exposing the OpenSession RPC
+service Cli {
+    rpc OpenSession(OpenSessionReq) returns (OpenSessionResp);
+    rpc CloseSession(CloseSessionReq) returns (CloseSessionResp);
+}
+
+// request to execute Python code within a session
+message ExecuteCodeReq {
+    string session_id = 1;
+    string code = 2;
+}
+
+// response containing execution result
+message ExecuteCodeResp {
+    string output = 1; // stdout / result
+    string error = 2;  // stderr / exception message (empty if none)
+    bool success = 3;  // true if executed without error
+}
+
+// service for executing code in a session
+service Executor {
+    rpc ExecuteCode(ExecuteCodeReq) returns (ExecuteCodeResp);
+}
+
+message GetVariableReq {
+    string session_id = 1;
+    string variable_name = 2;
+}
+
+message GetVariableResp {
+    bytes value = 1;
+    string error = 2;
+    bool success = 3;
+}
+
+service VariableGetter {
+    rpc GetVariable(GetVariableReq) returns (GetVariableResp);
+}

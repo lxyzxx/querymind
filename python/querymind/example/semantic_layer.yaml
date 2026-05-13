@@ -1,0 +1,33 @@
+name: demo_customer_analytics
+description: >
+  Demo semantic layer for the QueryMind SQL agent. Replace physical table and
+  column expressions with your real warehouse schema before running it.
+default_limit: 50
+
+tables:
+  - name: users
+    physical_name: public.users
+    description: Registered users in the application.
+    dimensions:
+      - name: user_id
+        expr: id
+        description: Unique user id.
+        synonyms: [uid, user]
+      - name: signup_date
+        expr: date(created_at)
+        description: User signup date.
+        synonyms: [register_date, created_day]
+      - name: status
+        expr: status
+        description: User lifecycle status.
+        synonyms: [user_status]
+    metrics:
+      - name: user_count
+        expr: count(*)
+        description: Number of users.
+        synonyms: [users, total_users]
+    filters:
+      - name: active_only
+        expr: status = 'active'
+        description: Keep only active users.
+        synonyms: [active users]
