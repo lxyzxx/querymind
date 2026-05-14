@@ -45,12 +45,15 @@ LIMIT 20
 - Deterministic metric-to-SQL compiler.
 - LangChain agent demo with semantic SQL tools.
 - Read-only SQL guard:
+  - AST-based validation with `sqlglot`
   - only `SELECT` / `WITH`
   - no multi-statement SQL
   - DDL and DML keywords are rejected
+  - semantic-layer table allowlist
   - row limit is applied
   - statement timeout is set
-- Unit tests for semantic SQL compilation and SQL safety checks.
+- Golden-question evaluation for deterministic regression checks.
+- Unit tests for semantic SQL compilation, SQL safety checks, and evaluation.
 
 ## Project Layout
 
@@ -74,6 +77,14 @@ Run tests:
 
 ```bash
 python3 -m pytest tests
+```
+
+Run the deterministic golden-question evaluation:
+
+```bash
+python3 querymind/example/evaluate_golden.py \
+  --semantic-layer querymind/example/semantic_layer.yaml \
+  --golden-file querymind/example/golden_questions.yaml
 ```
 
 Run the agent demo from the repository root:
@@ -109,7 +120,8 @@ QueryMind is intentionally small. It is not a full production data platform yet,
 
 - governed business semantics
 - deterministic SQL generation
-- read-only execution controls
+- AST-based read-only execution controls
+- golden-question regression evaluation
 - tool-call traceability
 
 See [docs/architecture.md](docs/architecture.md) for details and roadmap.

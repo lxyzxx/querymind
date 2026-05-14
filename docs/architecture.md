@@ -70,11 +70,21 @@ LIMIT 50
 
 The PostgreSQL tool applies a basic execution guard:
 
+- AST-based validation with `sqlglot`
 - only `SELECT` and `WITH`
 - no multi-statement SQL
 - DDL and DML keywords are rejected
+- physical tables must be present in the semantic-layer allowlist
 - row limit is applied
 - statement timeout is set
+
+### Evaluation
+
+Golden questions live in YAML and define the expected semantic request and SQL
+for representative business questions. The evaluator compiles each request,
+passes the SQL through the same guard used before execution, and reports a
+pass rate. This gives a deterministic regression signal when prompts, semantic
+definitions, or compiler behavior change.
 
 ## Roadmap
 
@@ -83,4 +93,4 @@ The PostgreSQL tool applies a basic execution guard:
 - join relationship compilation
 - role-based semantic layer filtering
 - SQL explain and cost guard
-- golden-question evaluation set
+- LLM-in-the-loop evaluation for natural-language-to-semantic-object accuracy

@@ -147,8 +147,10 @@ def build_agent(
                 "Run: python3 -m pip install -r requirements-agent.txt"
             ) from exc
 
+        allowed_tables = [table.physical_name for table in semantic_layer.tables]
+
         def run_readonly_sql(sql: str, limit: int) -> str:
-            wrapped_sql, safe_limit = wrap_with_limit(sql, limit)
+            wrapped_sql, safe_limit = wrap_with_limit(sql, limit, allowed_tables=allowed_tables)
             with psycopg2.connect(**_pg_config_from_env()) as conn:
                 conn.set_session(readonly=True, autocommit=True)
                 with conn.cursor(cursor_factory=RealDictCursor) as cursor:

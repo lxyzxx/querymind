@@ -9,7 +9,8 @@ description = "Governed AI2SQL engine with a semantic layer and SQL guard"
 requires-python = ">=3.8"
 
 dependencies = [
-    "pyyaml"
+    "pyyaml",
+    "sqlglot>=25.0.0"
 ]
 
 [tool.setuptools]

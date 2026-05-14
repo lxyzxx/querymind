@@ -1,5 +1,10 @@
 import pytest
 
+from querymind.agent.evaluation import (
+    evaluate_golden_questions,
+    load_golden_questions,
+    summarize_results,
+)
 from querymind.agent.semantic_layer import SemanticLayer, parse_filters, parse_name_list
 from querymind.agent.sql_guard import validate_readonly_sql, wrap_with_limit
 
@@ -100,3 +105,27 @@ def test_sql_guard_wraps_query_with_clamped_limit():
 
     assert sql == "select * from (select * from public.users) as agent_query limit %s"
     assert limit == 200
+
+
+def test_sql_guard_rejects_tables_outside_allowlist():
+    with pytest.raises(ValueError, match="SQL table is not allowed"):
+        validate_readonly_sql("select * from public.orders", allowed_tables=["public.users"])
+
+
+def test_sql_guard_accepts_cte_with_allowed_source_table():
+    sql = validate_readonly_sql(
+        "with active_users as (select * from public.users) select * from active_users",
+        allowed_tables=["public.users"],
+    )
+
+    assert sql.startswith("with active_users")
+
+
+def test_golden_question_evaluation_passes_demo_file():
+    layer = SemanticLayer.from_file("querymind/example/semantic_layer.yaml")
+    questions = load_golden_questions("querymind/example/golden_questions.yaml")
+
+    results = evaluate_golden_questions(layer, questions)
+    summary = summarize_results(results)
+
+    assert summary == {"total": 3, "passed": 3, "failed": 0, "pass_rate": 1.0}
