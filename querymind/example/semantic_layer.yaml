@@ -16,18 +16,18 @@ tables:
       - name: signup_date
         expr: date(created_at)
         description: User signup date.
-        synonyms: [register_date, created_day]
+        synonyms: [register_date, created_day, 注册日期, 注册时间]
       - name: status
         expr: status
         description: User lifecycle status.
-        synonyms: [user_status]
+        synonyms: [user_status, 用户状态, 状态]
     metrics:
       - name: user_count
         expr: count(*)
         description: Number of users.
-        synonyms: [users, total_users]
+        synonyms: [users, total_users, 用户数, 活跃用户数, 总用户数]
     filters:
       - name: active_only
         expr: status = 'active'
         description: Keep only active users.
-        synonyms: [active users]
+        synonyms: [active users, 活跃用户, 活跃]

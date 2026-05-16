@@ -29,9 +29,9 @@ class QueryPlan:
     clarification_question: Optional[str] = None
 
     def __post_init__(self) -> None:
-        if not self.question.strip():
+        if not self.question.strip() and not self.needs_clarification:
             raise ValueError("QueryPlan.question must not be empty.")
-        if not self.metric.strip():
+        if not self.metric.strip() and not self.needs_clarification:
             raise ValueError("QueryPlan.metric must not be empty.")
         normalized_type = self.question_type.strip().lower()
         if normalized_type not in SUPPORTED_QUESTION_TYPES:

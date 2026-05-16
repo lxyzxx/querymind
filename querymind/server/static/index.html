@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>QueryMind Playground</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f6f7f9;
+        --panel: #ffffff;
+        --panel-soft: #f0f4f8;
+        --text: #1f2933;
+        --muted: #65758b;
+        --line: #d8e0ea;
+        --accent: #0f766e;
+        --accent-strong: #115e59;
+        --danger: #b42318;
+        --code: #101828;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        letter-spacing: 0;
+      }
+
+      button,
+      textarea,
+      input {
+        font: inherit;
+      }
+
+      .shell {
+        min-height: 100vh;
+        display: grid;
+        grid-template-rows: auto 1fr;
+      }
+
+      header {
+        border-bottom: 1px solid var(--line);
+        background: var(--panel);
+      }
+
+      .header-inner {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 16px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 700;
+      }
+
+      .status {
+        min-height: 32px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        color: var(--muted);
+        background: var(--panel-soft);
+        font-size: 13px;
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--accent);
+      }
+
+      main {
+        max-width: 1440px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 20px 24px 28px;
+        display: grid;
+        grid-template-columns: minmax(280px, 420px) minmax(0, 1fr);
+        gap: 16px;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        min-width: 0;
+      }
+
+      .composer {
+        padding: 16px;
+        display: grid;
+        gap: 14px;
+        align-content: start;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+
+      label {
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      textarea,
+      input {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #fff;
+        color: var(--text);
+        padding: 10px 12px;
+        outline: none;
+      }
+
+      textarea {
+        min-height: 112px;
+        resize: vertical;
+        line-height: 1.5;
+      }
+
+      textarea:focus,
+      input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      button {
+        min-height: 36px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #fff;
+        color: var(--text);
+        padding: 8px 12px;
+        cursor: pointer;
+      }
+
+      button.primary {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #fff;
+      }
+
+      button.primary:hover {
+        background: var(--accent-strong);
+      }
+
+      button:hover {
+        border-color: var(--accent);
+      }
+
+      .samples {
+        display: grid;
+        gap: 8px;
+      }
+
+      .samples button {
+        text-align: left;
+        min-height: 38px;
+      }
+
+      .workspace {
+        display: grid;
+        grid-template-rows: auto 1fr;
+        overflow: hidden;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 4px;
+        padding: 10px 10px 0;
+        border-bottom: 1px solid var(--line);
+        overflow-x: auto;
+      }
+
+      .tab {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+        border-bottom-color: transparent;
+        color: var(--muted);
+      }
+
+      .tab.active {
+        color: var(--text);
+        background: var(--panel-soft);
+        border-color: var(--line);
+      }
+
+      .output {
+        padding: 16px;
+        overflow: auto;
+      }
+
+      pre {
+        margin: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+        background: var(--code);
+        color: #e8eef7;
+        border-radius: 8px;
+        padding: 16px;
+        min-height: 420px;
+        line-height: 1.55;
+        font-size: 13px;
+      }
+
+      .insight {
+        display: grid;
+        gap: 14px;
+      }
+
+      .answer {
+        padding: 14px;
+        border-radius: 8px;
+        background: var(--panel-soft);
+        border: 1px solid var(--line);
+        font-weight: 650;
+      }
+
+      .section {
+        display: grid;
+        gap: 8px;
+      }
+
+      .section h2 {
+        margin: 0;
+        font-size: 14px;
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 20px;
+        color: var(--text);
+      }
+
+      li + li {
+        margin-top: 6px;
+      }
+
+      .error {
+        color: var(--danger);
+      }
+
+      @media (max-width: 900px) {
+        main {
+          grid-template-columns: 1fr;
+          padding: 12px;
+        }
+
+        .header-inner {
+          padding: 14px 12px;
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        pre {
+          min-height: 300px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header>
+        <div class="header-inner">
+          <h1>QueryMind Playground</h1>
+          <div class="status"><span class="dot"></span><span id="status">就绪</span></div>
+        </div>
+      </header>
+
+      <main>
+        <section class="panel composer" aria-label="查询输入">
+          <div class="field">
+            <label for="question">自然语言问题</label>
+            <textarea id="question">按用户状态统计活跃用户数</textarea>
+          </div>
+
+          <div class="field">
+            <label for="limit">返回行数</label>
+            <input id="limit" type="number" min="1" max="200" value="20" />
+          </div>
+
+          <div class="actions">
+            <button class="primary" id="run">运行链路</button>
+            <button id="planOnly">只生成计划</button>
+            <button id="compileOnly">编译 SQL</button>
+          </div>
+
+          <div class="samples">
+            <label>示例问题</label>
+            <button data-sample="按用户状态统计活跃用户数">按用户状态统计活跃用户数</button>
+            <button data-sample="统计总用户数">统计总用户数</button>
+            <button data-sample="按注册日期统计活跃用户数">按注册日期统计活跃用户数</button>
+          </div>
+        </section>
+
+        <section class="panel workspace" aria-label="链路结果">
+          <nav class="tabs" aria-label="结果视图">
+            <button class="tab active" data-tab="plan">QueryPlan</button>
+            <button class="tab" data-tab="sql">SQL</button>
+            <button class="tab" data-tab="result">Result</button>
+            <button class="tab" data-tab="insight">Insight</button>
+            <button class="tab" data-tab="trace">Trace</button>
+          </nav>
+          <div class="output" id="output">
+            <pre id="plainOutput">{}</pre>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const state = {
+        activeTab: "plan",
+        plan: {},
+        sql: "",
+        result: {},
+        insight: {},
+        trace: {}
+      };
+
+      const question = document.getElementById("question");
+      const limit = document.getElementById("limit");
+      const statusText = document.getElementById("status");
+      const output = document.getElementById("output");
+
+      function payload() {
+        return {
+          question: question.value,
+          limit: Number(limit.value || 50)
+        };
+      }
+
+      async function post(path, body) {
+        const response = await fetch(path, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(body)
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.detail || response.statusText);
+        }
+        return data;
+      }
+
+      function setStatus(text, isError = false) {
+        statusText.textContent = text;
+        statusText.className = isError ? "error" : "";
+      }
+
+      function render() {
+        document.querySelectorAll(".tab").forEach((button) => {
+          button.classList.toggle("active", button.dataset.tab === state.activeTab);
+        });
+
+        if (state.activeTab === "insight") {
+          renderInsight();
+          return;
+        }
+
+        const value = {
+          plan: state.plan,
+          sql: state.sql,
+          result: state.result,
+          trace: state.trace
+        }[state.activeTab];
+
+        output.innerHTML = `<pre>${escapeHtml(
+          typeof value === "string" ? value : JSON.stringify(value, null, 2)
+        )}</pre>`;
+      }
+
+      function renderInsight() {
+        const insight = state.insight || {};
+        const list = (title, items) => `
+          <div class="section">
+            <h2>${title}</h2>
+            <ul>${(items || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>暂无</li>"}</ul>
+          </div>
+        `;
+
+        output.innerHTML = `
+          <div class="insight">
+            <div class="answer">${escapeHtml(insight.answer || "暂无解释")}</div>
+            ${list("观察", insight.observations)}
+            ${list("可能原因", insight.possible_causes)}
+            ${list("建议动作", insight.recommended_actions)}
+            <pre>${escapeHtml(JSON.stringify(insight.evidence || [], null, 2))}</pre>
+          </div>
+        `;
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      async function runAll() {
+        setStatus("运行中...");
+        try {
+          const data = await post("/analyze-demo", payload());
+          state.plan = data.plan || {};
+          state.sql = data.sql || "";
+          state.result = data.result || {};
+          state.insight = data.insight || {};
+          state.trace = data;
+          state.activeTab = "insight";
+          setStatus("已完成，Result 为 mock 数据");
+          render();
+        } catch (error) {
+          state.trace = {error: String(error)};
+          state.activeTab = "trace";
+          setStatus("运行失败", true);
+          render();
+        }
+      }
+
+      async function planOnly() {
+        setStatus("生成计划中...");
+        const data = await post("/plan", payload());
+        state.plan = data.plan || {};
+        state.trace = data;
+        state.activeTab = "plan";
+        setStatus("计划已生成");
+        render();
+      }
+
+      async function compileOnly() {
+        setStatus("编译 SQL 中...");
+        const data = state.plan.metric ? {plan: state.plan} : await post("/plan", payload());
+        state.plan = data.plan || data;
+        const compiled = await post("/compile-sql", {plan: state.plan});
+        state.sql = compiled.sql || "";
+        state.trace = compiled;
+        state.activeTab = "sql";
+        setStatus("SQL 已编译");
+        render();
+      }
+
+      document.getElementById("run").addEventListener("click", runAll);
+      document.getElementById("planOnly").addEventListener("click", () => {
+        planOnly().catch((error) => {
+          state.trace = {error: String(error)};
+          state.activeTab = "trace";
+          setStatus("生成失败", true);
+          render();
+        });
+      });
+      document.getElementById("compileOnly").addEventListener("click", () => {
+        compileOnly().catch((error) => {
+          state.trace = {error: String(error)};
+          state.activeTab = "trace";
+          setStatus("编译失败", true);
+          render();
+        });
+      });
+
+      document.querySelectorAll(".tab").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.activeTab = button.dataset.tab;
+          render();
+        });
+      });
+
+      document.querySelectorAll("[data-sample]").forEach((button) => {
+        button.addEventListener("click", () => {
+          question.value = button.dataset.sample;
+          runAll();
+        });
+      });
+
+      runAll();
+    </script>
+  </body>
+</html>

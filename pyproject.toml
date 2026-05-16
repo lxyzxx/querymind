@@ -21,3 +21,6 @@ packages = [
     "querymind.llm",
     "querymind.server"
 ]
+
+[tool.setuptools.package-data]
+"querymind.server" = ["static/*.html"]

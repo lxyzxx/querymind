@@ -94,6 +94,7 @@ python3 -m pip install -r requirements-agent.txt
 运行测试：
 
 ```bash
+python3 -m pip install -r requirements-dev.txt
 python3 -m pytest tests
 ```
 
@@ -143,9 +144,15 @@ uvicorn querymind.server.app:app --reload
 
 当前 API：
 
+- `GET /`
 - `GET /health`
+- `POST /plan`
 - `POST /compile-sql`
 - `POST /insight`
+- `POST /analyze-demo`
+
+`/analyze-demo` 用于 Playground 演示完整链路，返回的 `Result` 是 mock
+数据，不会连接真实数据库。
 
 ## 设计说明
 
