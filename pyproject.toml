@@ -16,5 +16,6 @@ dependencies = [
 [tool.setuptools]
 packages = [
     "querymind",
-    "querymind.agent"
+    "querymind.agent",
+    "querymind.core"
 ]
