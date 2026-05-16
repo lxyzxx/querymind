@@ -17,5 +17,7 @@ dependencies = [
 packages = [
     "querymind",
     "querymind.agent",
-    "querymind.core"
+    "querymind.core",
+    "querymind.llm",
+    "querymind.server"
 ]
