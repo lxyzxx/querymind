@@ -64,17 +64,6 @@ def _print_agent_trace(result: Any) -> None:
                 print(json.dumps(content, ensure_ascii=False, indent=2, default=_json_default))
 
 
-def _pg_config_from_env() -> dict:
-    return {
-        "host": os.getenv("QUERYMIND_PG_HOST", "localhost"),
-        "port": int(os.getenv("QUERYMIND_PG_PORT", "5432")),
-        "dbname": os.getenv("QUERYMIND_PG_DATABASE", "postgres"),
-        "user": os.getenv("QUERYMIND_PG_USER", "postgres"),
-        "password": os.getenv("QUERYMIND_PG_PASSWORD", ""),
-        "connect_timeout": int(os.getenv("QUERYMIND_PG_CONNECT_TIMEOUT", "5")),
-    }
-
-
 def build_agent(
     model: str,
     enable_pg: bool,
@@ -93,7 +82,7 @@ def build_agent(
         ) from exc
 
     from querymind.agent.semantic_layer import parse_filters, parse_name_list
-    from querymind.agent.sql_guard import wrap_with_limit
+    from querymind.agent.postgres import execute_readonly_sql
 
     tools = []
 
@@ -138,27 +127,12 @@ def build_agent(
     tools.extend([describe_semantic_layer, compile_metric_sql])
 
     if enable_pg:
-        try:
-            import psycopg2
-            from psycopg2.extras import RealDictCursor
-        except ImportError as exc:
-            raise RuntimeError(
-                "PostgreSQL dependency is not installed. "
-                "Run: python3 -m pip install -r requirements-agent.txt"
-            ) from exc
-
         allowed_tables = [table.physical_name for table in semantic_layer.tables]
 
         def run_readonly_sql(sql: str, limit: int) -> str:
-            wrapped_sql, safe_limit = wrap_with_limit(sql, limit, allowed_tables=allowed_tables)
-            with psycopg2.connect(**_pg_config_from_env()) as conn:
-                conn.set_session(readonly=True, autocommit=True)
-                with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                    cursor.execute("set statement_timeout = %s", (5000,))
-                    cursor.execute(wrapped_sql, (safe_limit,))
-                    rows = cursor.fetchall()
+            result = execute_readonly_sql(sql, limit, allowed_tables=allowed_tables)
             return json.dumps(
-                {"row_count": len(rows), "rows": rows},
+                {"row_count": result["row_count"], "rows": result["rows"]},
                 ensure_ascii=False,
                 default=_json_default,
             )

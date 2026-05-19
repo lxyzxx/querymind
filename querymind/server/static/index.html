@@ -132,6 +132,11 @@
         outline: none;
       }
 
+      input[type="checkbox"] {
+        width: auto;
+        margin-right: 8px;
+      }
+
       textarea {
         min-height: 112px;
         resize: vertical;
@@ -305,6 +310,13 @@
             <input id="limit" type="number" min="1" max="200" value="20" />
           </div>
 
+          <div class="field">
+            <label>
+              <input id="usePostgres" type="checkbox" />
+              使用 PostgreSQL 实查
+            </label>
+          </div>
+
           <div class="actions">
             <button class="primary" id="run">运行链路</button>
             <button id="planOnly">只生成计划</button>
@@ -346,6 +358,7 @@
 
       const question = document.getElementById("question");
       const limit = document.getElementById("limit");
+      const usePostgres = document.getElementById("usePostgres");
       const statusText = document.getElementById("status");
       const output = document.getElementById("output");
 
@@ -428,14 +441,14 @@
       async function runAll() {
         setStatus("运行中...");
         try {
-          const data = await post("/analyze-demo", payload());
+          const data = await post(usePostgres.checked ? "/analyze-pg" : "/analyze-demo", payload());
           state.plan = data.plan || {};
           state.sql = data.sql || "";
           state.result = data.result || {};
           state.insight = data.insight || {};
           state.trace = data;
           state.activeTab = "insight";
-          setStatus("已完成，Result 为 mock 数据");
+          setStatus(usePostgres.checked ? "已完成，Result 来自 PostgreSQL" : "已完成，Result 为 mock 数据");
           render();
         } catch (error) {
           state.trace = {error: String(error)};

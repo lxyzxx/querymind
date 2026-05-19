@@ -6,7 +6,7 @@ default_limit: 50
 
 tables:
   - name: users
-    physical_name: public.users
+    physical_name: public.querymind_demo_users
     description: Registered users in the application.
     dimensions:
       - name: user_id
@@ -31,3 +31,33 @@ tables:
         expr: status = 'active'
         description: Keep only active users.
         synonyms: [active users, 活跃用户, 活跃]
+  - name: orders
+    physical_name: public.querymind_demo_orders
+    description: Demo order transactions for GMV analysis.
+    dimensions:
+      - name: order_date
+        expr: date(created_at)
+        description: Order date.
+        synonyms: [订单日期, 下单日期, 日期]
+      - name: channel
+        expr: channel
+        description: Acquisition or sales channel.
+        synonyms: [渠道, 来源]
+    metrics:
+      - name: gmv
+        expr: sum(amount)
+        description: Gross merchandise value.
+        synonyms: [GMV, gmv, 销售额, 成交额, 交易额]
+      - name: order_count
+        expr: count(*)
+        description: Number of paid orders.
+        synonyms: [订单数, 支付订单数, 成交订单数, orders]
+      - name: avg_order_value
+        expr: avg(amount)
+        description: Average order value.
+        synonyms: [客单价, 平均订单金额, AOV, aov]
+    filters:
+      - name: paid_only
+        expr: status = 'paid'
+        description: Keep only paid orders.
+        synonyms: [已支付, 支付订单, paid orders]

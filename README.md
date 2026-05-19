@@ -134,6 +134,32 @@ python3 querymind/example/agent_demo.py \
   "按用户状态统计用户数，只看活跃用户"
 ```
 
+运行不依赖 LLM 的 PostgreSQL 端到端链路：
+
+```bash
+export QUERYMIND_PG_HOST=localhost
+export QUERYMIND_PG_PORT=5432
+export QUERYMIND_PG_DATABASE=postgres
+export QUERYMIND_PG_USER=root
+export QUERYMIND_PG_PASSWORD=123456
+
+python3 querymind/example/run_pg_flow.py \
+  --setup-demo-data \
+  "按用户状态统计活跃用户数"
+```
+
+`--setup-demo-data` 会创建并填充独立示例表
+`public.querymind_demo_users` 和 `public.querymind_demo_orders`，不会写入已有的
+`public.users`。
+
+也可以运行销售额诊断类问题：
+
+```bash
+python3 querymind/example/run_pg_flow.py \
+  --setup-demo-data \
+  "为什么上个月的销售额比上上个月的少，怎么优化？"
+```
+
 连接真实数据库前，请先修改
 [semantic_layer.yaml](querymind/example/semantic_layer.yaml)，让物理表名和字段
 表达式匹配你的数据仓库。
@@ -153,9 +179,11 @@ uvicorn querymind.server.app:app --reload
 - `POST /compile-sql`
 - `POST /insight`
 - `POST /analyze-demo`
+- `POST /analyze-pg`
 
 `/analyze-demo` 用于 Playground 演示完整链路，返回的 `Result` 是 mock
-数据，不会连接真实数据库。
+数据，不会连接真实数据库。`/analyze-pg` 会执行 PostgreSQL 查询；Playground
+中勾选“使用 PostgreSQL 实查”后会走这个接口。
 
 ## 设计说明
 

@@ -40,13 +40,17 @@ class BasicQueryPlanner:
         table, metric_name = metric
         dimensions = self._match_dimensions(text, table)
         named_filters = self._match_filters(text, table)
+        question_type = _question_type(text)
+        breakdowns = _default_breakdowns(text, table, question_type)
 
         return QueryPlan(
             question=text,
-            question_type=_question_type(text),
+            question_type=question_type,
             metric=metric_name,
             dimensions=dimensions,
             named_filters=named_filters,
+            comparison=_comparison(text),
+            breakdowns=breakdowns,
             limit=limit,
         )
 
@@ -60,10 +64,6 @@ class BasicQueryPlanner:
 
         if best is not None:
             return best[1], best[2]
-
-        for table in self._semantic_layer.tables:
-            if table.metrics:
-                return table, table.metrics[0].name
         return None
 
     def _match_dimensions(self, text: str, table: Any) -> List[str]:
@@ -98,6 +98,37 @@ def _question_type(text: str) -> str:
     if any(token in lowered for token in ("建议", "应该", "recommend")):
         return "suggestion"
     return "fact"
+
+
+def _comparison(text: str) -> Optional[str]:
+    lowered = text.lower()
+    if (
+        ("上个月" in lowered and "上上个月" in lowered)
+        or "环比" in lowered
+        or "month over month" in lowered
+        or "mom" in lowered
+    ):
+        return "month_over_month"
+    return None
+
+
+def _default_breakdowns(text: str, table: Any, question_type: str) -> List[str]:
+    if question_type != "diagnosis":
+        return []
+
+    matches = []
+    for dimension in table.dimensions:
+        score = _best_alias_score(text, [dimension.name, *dimension.synonyms])
+        if score:
+            matches.append((score, dimension.name))
+    if matches:
+        matches.sort(reverse=True)
+        return [name for _, name in matches]
+
+    for candidate in ("channel", "category", "region", "city", "source"):
+        if any(dimension.name == candidate for dimension in table.dimensions):
+            return [candidate]
+    return []
 
 
 def _best_alias_score(text: str, aliases: List[str]) -> int:

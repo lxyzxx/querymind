@@ -1,8 +1,17 @@
 from pathlib import Path
 from typing import Any, Dict
 
+from querymind.agent.postgres import execute_readonly_sql
 from querymind.agent.semantic_layer import SemanticLayer
-from querymind.core import BasicQueryPlanner, QueryPlan, QueryResult, generate_basic_insight
+from querymind.core import (
+    BasicQueryPlanner,
+    QueryPlan,
+    QueryResult,
+    build_month_over_month_sql,
+    can_build_comparison_query,
+    generate_basic_insight,
+    generate_comparison_insight,
+)
 
 
 DEFAULT_SEMANTIC_LAYER = "querymind/example/semantic_layer.yaml"
@@ -42,6 +51,10 @@ def create_app():
     @app.post("/analyze-demo")
     def analyze_demo(payload: Dict[str, Any]) -> Dict[str, Any]:
         return analyze_demo_payload(payload)
+
+    @app.post("/analyze-pg")
+    def analyze_pg(payload: Dict[str, Any]) -> Dict[str, Any]:
+        return analyze_pg_payload(payload)
 
     @app.post("/insight")
     def insight(payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -112,6 +125,39 @@ def analyze_demo_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def analyze_pg_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
+    layer = _load_layer(payload)
+    planner = BasicQueryPlanner(layer)
+    plan = planner.plan(str(payload.get("question", "")), limit=payload.get("limit"))
+    if plan.needs_clarification:
+        return _clarification_response(plan)
+
+    if can_build_comparison_query(plan):
+        sql = build_month_over_month_sql(layer, plan)
+    else:
+        sql = layer.build_metric_query(
+            metric_name=plan.metric,
+            dimensions=plan.dimensions,
+            filters=plan.filters,
+            named_filters=plan.named_filters,
+            limit=plan.limit,
+        )
+    allowed_tables = [table.physical_name for table in layer.tables]
+    pg_result = execute_readonly_sql(sql, plan.limit, allowed_tables=allowed_tables)
+    result = QueryResult(sql=sql, rows=pg_result["rows"], row_count=pg_result["row_count"])
+    insight = (
+        generate_comparison_insight(plan, result)
+        if can_build_comparison_query(plan)
+        else generate_basic_insight(plan, result)
+    )
+    return {
+        "plan": plan.to_dict(),
+        "sql": sql,
+        "result": {**result.to_dict(), "source": "postgres"},
+        "insight": insight.to_dict(),
+    }
+
+
 def insight_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
     plan = QueryPlan.from_dict(payload.get("plan", {}))
     result_payload = payload.get("result", {})
@@ -125,6 +171,21 @@ def insight_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 def _load_layer(payload: Dict[str, Any]) -> SemanticLayer:
     return SemanticLayer.from_file(str(payload.get("semantic_layer", DEFAULT_SEMANTIC_LAYER)))
+
+
+def _clarification_response(plan: QueryPlan) -> Dict[str, Any]:
+    return {
+        "plan": plan.to_dict(),
+        "sql": "",
+        "result": {"sql": "", "row_count": 0, "rows": [], "source": "none"},
+        "insight": {
+            "answer": plan.clarification_question or "需要补充查询条件。",
+            "observations": [],
+            "possible_causes": [],
+            "recommended_actions": [],
+            "evidence": [],
+        },
+    }
 
 
 def _mock_rows(plan: QueryPlan) -> list:

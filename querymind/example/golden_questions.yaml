@@ -7,7 +7,7 @@ questions:
       named_filters: [active_only]
       limit: 20
     expected_sql: >
-      SELECT status AS status, count(*) AS user_count FROM public.users
+      SELECT status AS status, count(*) AS user_count FROM public.querymind_demo_users
       WHERE (status = 'active') GROUP BY status ORDER BY user_count DESC LIMIT 20
 
   - id: total_user_count
@@ -18,7 +18,7 @@ questions:
       named_filters: []
       limit: 50
     expected_sql: >
-      SELECT count(*) AS user_count FROM public.users LIMIT 50
+      SELECT count(*) AS user_count FROM public.querymind_demo_users LIMIT 50
 
   - id: user_count_by_signup_date_for_active_users
     question: 按注册日期统计活跃用户数
@@ -28,5 +28,16 @@ questions:
       named_filters: [active_only]
       limit: 50
     expected_sql: >
-      SELECT date(created_at) AS signup_date, count(*) AS user_count FROM public.users
+      SELECT date(created_at) AS signup_date, count(*) AS user_count FROM public.querymind_demo_users
       WHERE (status = 'active') GROUP BY date(created_at) ORDER BY user_count DESC LIMIT 50
+
+  - id: total_gmv
+    question: GMV情况如何
+    semantic_request:
+      metric: gmv
+      dimensions: []
+      named_filters: [paid_only]
+      limit: 20
+    expected_sql: >
+      SELECT sum(amount) AS gmv FROM public.querymind_demo_orders
+      WHERE (status = 'paid') LIMIT 20
