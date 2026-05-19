@@ -106,12 +106,13 @@ def run_flow(args: argparse.Namespace) -> Dict[str, Any]:
     from querymind.agent.postgres import execute_readonly_sql
     from querymind.agent.semantic_layer import SemanticLayer
     from querymind.core import (
-        BasicQueryPlanner,
         QueryResult,
         build_month_over_month_sql,
         can_build_comparison_query,
         generate_basic_insight,
         generate_comparison_insight,
+        generate_insight_with_optional_llm,
+        plan_with_optional_llm,
     )
 
     pg_config = _pg_config_from_args(args)
@@ -119,11 +120,18 @@ def run_flow(args: argparse.Namespace) -> Dict[str, Any]:
         setup_demo_data(pg_config)
 
     layer = SemanticLayer.from_file(args.semantic_layer)
-    planner = BasicQueryPlanner(layer)
-    plan = planner.plan(args.question, limit=args.limit)
+    plan_generation = plan_with_optional_llm(
+        layer,
+        args.question,
+        limit=args.limit,
+        use_llm=getattr(args, "use_llm_plan", False),
+    )
+    plan = plan_generation.plan
     if plan.needs_clarification:
         return {
             "plan": plan.to_dict(),
+            "plan_source": plan_generation.source,
+            "plan_error": plan_generation.error,
             "sql": "",
             "result": {"sql": "", "row_count": 0, "rows": [], "source": "none"},
             "insight": {
@@ -152,16 +160,26 @@ def run_flow(args: argparse.Namespace) -> Dict[str, Any]:
         pg_config=pg_config,
     )
     result = QueryResult(sql=sql, rows=pg_result["rows"], row_count=pg_result["row_count"])
-    insight = (
-        generate_comparison_insight(plan, result)
-        if can_build_comparison_query(plan)
-        else generate_basic_insight(plan, result)
+    insight_generation = generate_insight_with_optional_llm(
+        args.question,
+        plan,
+        result,
+        deterministic=(
+            generate_comparison_insight
+            if can_build_comparison_query(plan)
+            else generate_basic_insight
+        ),
+        use_llm=getattr(args, "use_llm_insight", False),
     )
     return {
         "plan": plan.to_dict(),
+        "plan_source": plan_generation.source,
+        "plan_error": plan_generation.error,
         "sql": sql,
         "result": {**result.to_dict(), "source": "postgres"},
-        "insight": insight.to_dict(),
+        "insight": insight_generation.insight.to_dict(),
+        "insight_source": insight_generation.source,
+        "insight_error": insight_generation.error,
     }
 
 
@@ -171,6 +189,8 @@ def main() -> None:
     parser.add_argument("--semantic-layer", default="querymind/example/semantic_layer.yaml")
     parser.add_argument("--limit", type=int, default=20)
     parser.add_argument("--setup-demo-data", action="store_true")
+    parser.add_argument("--use-llm-plan", action="store_true")
+    parser.add_argument("--use-llm-insight", action="store_true")
     parser.add_argument("--pg-host")
     parser.add_argument("--pg-port", type=int)
     parser.add_argument("--pg-dbname")

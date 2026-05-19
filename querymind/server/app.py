@@ -11,6 +11,8 @@ from querymind.core import (
     can_build_comparison_query,
     generate_basic_insight,
     generate_comparison_insight,
+    generate_insight_with_optional_llm,
+    plan_with_optional_llm,
 )
 
 
@@ -70,9 +72,17 @@ def playground_html() -> str:
 
 def plan_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
     layer = _load_layer(payload)
-    planner = BasicQueryPlanner(layer)
-    plan = planner.plan(str(payload.get("question", "")), limit=payload.get("limit"))
-    return {"plan": plan.to_dict()}
+    generation = plan_with_optional_llm(
+        layer,
+        str(payload.get("question", "")),
+        limit=payload.get("limit"),
+        use_llm=bool(payload.get("use_llm_plan") or payload.get("use_llm")),
+    )
+    return {
+        "plan": generation.plan.to_dict(),
+        "plan_source": generation.source,
+        "plan_error": generation.error,
+    }
 
 
 def compile_sql_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -127,10 +137,19 @@ def analyze_demo_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 def analyze_pg_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
     layer = _load_layer(payload)
-    planner = BasicQueryPlanner(layer)
-    plan = planner.plan(str(payload.get("question", "")), limit=payload.get("limit"))
+    question = str(payload.get("question", ""))
+    plan_generation = plan_with_optional_llm(
+        layer,
+        question,
+        limit=payload.get("limit"),
+        use_llm=bool(payload.get("use_llm_plan") or payload.get("use_llm")),
+    )
+    plan = plan_generation.plan
     if plan.needs_clarification:
-        return _clarification_response(plan)
+        response = _clarification_response(plan)
+        response["plan_source"] = plan_generation.source
+        response["plan_error"] = plan_generation.error
+        return response
 
     if can_build_comparison_query(plan):
         sql = build_month_over_month_sql(layer, plan)
@@ -145,16 +164,26 @@ def analyze_pg_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
     allowed_tables = [table.physical_name for table in layer.tables]
     pg_result = execute_readonly_sql(sql, plan.limit, allowed_tables=allowed_tables)
     result = QueryResult(sql=sql, rows=pg_result["rows"], row_count=pg_result["row_count"])
-    insight = (
-        generate_comparison_insight(plan, result)
-        if can_build_comparison_query(plan)
-        else generate_basic_insight(plan, result)
+    insight_generation = generate_insight_with_optional_llm(
+        question,
+        plan,
+        result,
+        deterministic=(
+            generate_comparison_insight
+            if can_build_comparison_query(plan)
+            else generate_basic_insight
+        ),
+        use_llm=bool(payload.get("use_llm_insight") or payload.get("use_llm")),
     )
     return {
         "plan": plan.to_dict(),
+        "plan_source": plan_generation.source,
+        "plan_error": plan_generation.error,
         "sql": sql,
         "result": {**result.to_dict(), "source": "postgres"},
-        "insight": insight.to_dict(),
+        "insight": insight_generation.insight.to_dict(),
+        "insight_source": insight_generation.source,
+        "insight_error": insight_generation.error,
     }
 
 

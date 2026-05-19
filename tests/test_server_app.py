@@ -1,3 +1,4 @@
+from querymind.core import Insight, QueryPlan
 from querymind.server.app import analyze_demo_payload, analyze_pg_payload, plan_payload, playground_html
 
 
@@ -44,6 +45,7 @@ def test_analyze_pg_clarifies_unknown_metric():
     assert response["plan"]["needs_clarification"] is True
     assert response["sql"] == ""
     assert response["result"]["source"] == "none"
+    assert response["plan_source"] == "deterministic"
 
 
 def test_analyze_pg_handles_gmv_question(monkeypatch):
@@ -100,3 +102,38 @@ def test_analyze_pg_handles_sales_drop_diagnosis(monkeypatch):
     assert response["plan"]["breakdowns"] == ["channel"]
     assert "少 1500" in response["insight"]["answer"]
     assert "channel=ads" in response["insight"]["possible_causes"][0]
+    assert response["plan_source"] == "deterministic"
+    assert response["insight_source"] == "deterministic"
+
+
+def test_analyze_pg_uses_llm_plan_and_insight_when_enabled(monkeypatch):
+    class FakeClient:
+        def generate_query_plan(self, question, semantic_context):
+            return QueryPlan(
+                question=question,
+                question_type="fact",
+                metric="gmv",
+                limit=20,
+            )
+
+        def generate_insight(self, question, plan, result):
+            return Insight(answer="LLM 生成的 GMV 分析。")
+
+    def fake_execute_readonly_sql(sql, limit, allowed_tables=None):
+        return {
+            "sql": sql,
+            "wrapped_sql": "select * from (...)",
+            "limit": 20,
+            "row_count": 1,
+            "rows": [{"gmv": 7500}],
+        }
+
+    monkeypatch.setattr("querymind.core.planning_pipeline.create_llm_client_from_env", lambda: FakeClient())
+    monkeypatch.setattr("querymind.core.insight_pipeline.create_llm_client_from_env", lambda: FakeClient())
+    monkeypatch.setattr("querymind.server.app.execute_readonly_sql", fake_execute_readonly_sql)
+
+    response = analyze_pg_payload({"question": "GMV情况如何", "limit": 20, "use_llm": True})
+
+    assert response["plan_source"] == "llm"
+    assert response["insight_source"] == "llm"
+    assert response["insight"]["answer"] == "LLM 生成的 GMV 分析。"

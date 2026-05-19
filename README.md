@@ -160,6 +160,25 @@ python3 querymind/example/run_pg_flow.py \
   "为什么上个月的销售额比上上个月的少，怎么优化？"
 ```
 
+默认情况下，QueryMind 用确定性规则生成 QueryPlan 和 insight。也可以打开
+LLM 辅助，但 SQL 仍然只由语义层编译器生成：
+
+```bash
+export QUERYMIND_LLM_ENABLED=true
+export QUERYMIND_LLM_PROVIDER=deepseek
+export QUERYMIND_LLM_API_KEY=your_api_key
+export QUERYMIND_LLM_MODEL=deepseek-chat
+
+python3 querymind/example/run_pg_flow.py \
+  --setup-demo-data \
+  --use-llm-plan \
+  --use-llm-insight \
+  "为什么上个月的销售额比上上个月的少，怎么优化？"
+```
+
+LLM 只能生成结构化 QueryPlan 和自然语言 insight；`QueryPlan -> SQL` 仍由
+语义层确定性编译，并继续经过 SQL Guard。
+
 连接真实数据库前，请先修改
 [semantic_layer.yaml](querymind/example/semantic_layer.yaml)，让物理表名和字段
 表达式匹配你的数据仓库。

@@ -317,6 +317,13 @@
             </label>
           </div>
 
+          <div class="field">
+            <label>
+              <input id="useLlm" type="checkbox" />
+              使用 LLM 生成计划和分析
+            </label>
+          </div>
+
           <div class="actions">
             <button class="primary" id="run">运行链路</button>
             <button id="planOnly">只生成计划</button>
@@ -359,13 +366,15 @@
       const question = document.getElementById("question");
       const limit = document.getElementById("limit");
       const usePostgres = document.getElementById("usePostgres");
+      const useLlm = document.getElementById("useLlm");
       const statusText = document.getElementById("status");
       const output = document.getElementById("output");
 
       function payload() {
         return {
           question: question.value,
-          limit: Number(limit.value || 50)
+          limit: Number(limit.value || 50),
+          use_llm: useLlm.checked
         };
       }
 

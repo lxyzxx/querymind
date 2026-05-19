@@ -47,6 +47,7 @@
 - [x] 修正 `BasicQueryPlanner` 的未知指标兜底行为：未定义指标会返回澄清，不再默认使用第一个指标。
 - [x] 增加 GMV 和未知指标澄清的 planner、API、PG 端到端回归测试。
 - [x] 增加“上个月销售额比上上个月下降原因”诊断链路：识别 `month_over_month`，按 `channel` 拆解，生成 PostgreSQL 对比 SQL，并基于结果输出主要下降来源和建议。
+- [x] 接入可选 LLM 辅助：LLM 可生成结构化 QueryPlan 和 insight，但 SQL 仍由语义层确定性编译，并通过 SQL Guard。
 - [x] 单元测试覆盖语义层、SQL Guard、评测、核心结构、QueryPlan、Insight、LLM contract 和 Server API。
 - [x] README 快速开始和项目结构说明。
 - [x] 架构说明和路线图：`docs/architecture.md`。
@@ -60,7 +61,7 @@
 - [ ] 明确 Anthropic 适配器是否作为正式支持路径，或仅保留为可选示例。
 - [ ] 为 `/analyze-pg` 增加更清晰的错误返回，区分语义层错误、SQL Guard 错误和数据库连接错误。
 - [ ] 增加更多覆盖完整 PostgreSQL 链路的回归用例或集成测试。
-- [ ] 把当前确定性 insight 升级为可选 LLM 分析：输入 QueryPlan、SQL、查询结果和 evidence，让 LLM 生成更自然的原因分析和优化建议。
+- [ ] 用真实 LLM API 做手工验收，确认 LLM 生成的 QueryPlan 和 insight 足够稳定。
 - [ ] 扩展诊断类问题：同比、最近 N 天、商品/地区/新老客拆解、多指标联动分析。
 
 ## 未完成
