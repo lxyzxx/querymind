@@ -138,6 +138,7 @@ def setup_demo_data(pg_config: Dict[str, Any]) -> None:
 
 
 def run_flow(args: argparse.Namespace) -> Dict[str, Any]:
+    from querymind.config import load_dotenv
     from querymind.agent.postgres import execute_readonly_sql
     from querymind.agent.semantic_layer import SemanticLayer
     from querymind.core import (
@@ -152,6 +153,7 @@ def run_flow(args: argparse.Namespace) -> Dict[str, Any]:
         plan_with_optional_llm,
     )
 
+    load_dotenv(getattr(args, "env_file", ".env"))
     pg_config = _pg_config_from_args(args)
     if args.setup_demo_data:
         setup_demo_data(pg_config)
@@ -226,6 +228,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Run QueryMind's PostgreSQL end-to-end flow.")
     parser.add_argument("question", nargs="?", default="按用户状态统计活跃用户数")
     parser.add_argument("--semantic-layer", default="querymind/example/semantic_layer.yaml")
+    parser.add_argument("--env-file", default=".env")
     parser.add_argument("--limit", type=int, default=20)
     parser.add_argument("--setup-demo-data", action="store_true")
     parser.add_argument("--use-llm-plan", action="store_true")

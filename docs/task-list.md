@@ -51,6 +51,7 @@
 - [x] 扩展 demo 业务指标：订单数、客单价、退款金额、退款率、转化率。
 - [x] 扩展业务问法：最近 7 天 GMV 趋势、渠道 GMV 排名、订单数下降来源、客单价下降、退款和转化率查询。
 - [x] 为新增指标和问法补充 golden questions、planner/API 单测和真实 PostgreSQL 集成测试。
+- [x] 增加 `.env.example` 和本地 `.env` 加载逻辑，用于配置 PostgreSQL 和真实 LLM key。
 - [x] 单元测试覆盖语义层、SQL Guard、评测、核心结构、QueryPlan、Insight、LLM contract 和 Server API。
 - [x] README 快速开始和项目结构说明。
 - [x] 架构说明和路线图：`docs/architecture.md`。

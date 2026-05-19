@@ -3,6 +3,7 @@ from typing import Any, Dict
 
 from querymind.agent.postgres import execute_readonly_sql
 from querymind.agent.semantic_layer import SemanticLayer
+from querymind.config import load_dotenv
 from querymind.core import (
     BasicQueryPlanner,
     QueryPlan,
@@ -19,6 +20,7 @@ from querymind.core import (
 
 
 DEFAULT_SEMANTIC_LAYER = "querymind/example/semantic_layer.yaml"
+load_dotenv()
 
 
 def create_app():

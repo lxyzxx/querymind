@@ -91,6 +91,15 @@ tests/                              单元测试
 python3 -m pip install -r requirements.txt
 ```
 
+准备本地配置：
+
+```bash
+cp .env.example .env
+```
+
+编辑 `.env`，填入 PostgreSQL 和可选 LLM 配置。`.env` 已被 `.gitignore`
+忽略，不要提交真实密钥。
+
 如果要运行 Agent demo，再安装 Agent 依赖：
 
 ```bash
@@ -180,10 +189,12 @@ python3 querymind/example/run_pg_flow.py --setup-demo-data "转化率情况如�
 LLM 辅助，但 SQL 仍然只由语义层编译器生成：
 
 ```bash
-export QUERYMIND_LLM_ENABLED=true
-export QUERYMIND_LLM_PROVIDER=deepseek
-export QUERYMIND_LLM_API_KEY=your_api_key
-export QUERYMIND_LLM_MODEL=deepseek-chat
+# .env
+QUERYMIND_LLM_ENABLED=true
+QUERYMIND_LLM_PROVIDER=deepseek
+QUERYMIND_LLM_BASE_URL=https://api.deepseek.com
+QUERYMIND_LLM_API_KEY=your_api_key
+QUERYMIND_LLM_MODEL=deepseek-chat
 
 python3 querymind/example/run_pg_flow.py \
   --setup-demo-data \
