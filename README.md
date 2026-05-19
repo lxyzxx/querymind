@@ -68,6 +68,7 @@ LIMIT 20
 ## 项目结构
 
 ```text
+docs/task-list.md                   当前任务状态和下次接续清单
 docs/architecture.md                架构说明和路线图
 querymind/agent/                    现有语义层、SQL 编译器和 Agent demo
 querymind/core/                     QueryPlan、QueryResult、Insight 等核心结构
@@ -76,6 +77,8 @@ querymind/server/                   可选 FastAPI 服务骨架
 querymind/example/                  示例语义层、Agent demo 和评测样例
 tests/                              单元测试
 ```
+
+继续开发前，先读 [docs/task-list.md](docs/task-list.md)。它记录已完成事项、未完成事项和下次接续清单，避免每次都重新遍历整个 codebase。
 
 ## 快速开始
 
