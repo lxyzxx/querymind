@@ -55,6 +55,7 @@
 - [x] 用真实 LLM API 验证 QueryPlan 和 insight 链路：销售额下降诊断、最近 7 天趋势、渠道排行均可进入语义层 SQL 链路。
 - [x] 收紧 LLM QueryPlan prompt，并规范化 comparison 输出，避免 LLM 把可执行问题错误转成澄清问题。
 - [x] 修复 QueryResult 日期序列化，保证包含日期的趋势结果可以传给 LLM 生成 insight。
+- [x] 为 OpenAI-compatible LLM 调用增加网络重试，缓解临时 SSL EOF / URL 打开失败导致的 fallback。
 - [x] 单元测试覆盖语义层、SQL Guard、评测、核心结构、QueryPlan、Insight、LLM contract 和 Server API。
 - [x] README 快速开始和项目结构说明。
 - [x] 架构说明和路线图：`docs/architecture.md`。

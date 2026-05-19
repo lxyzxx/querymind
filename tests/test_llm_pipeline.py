@@ -1,4 +1,5 @@
 import json
+import urllib.error
 
 from querymind.agent.semantic_layer import SemanticLayer
 from querymind.core import (
@@ -99,6 +100,49 @@ def test_openai_compatible_client_generates_insight_from_json_response():
 
     assert insight.answer == "GMV 下降主要来自 ads。"
     assert insight.evidence[0].label == "delta"
+
+
+def test_openai_compatible_client_retries_transient_network_errors():
+    payload = {
+        "choices": [
+            {
+                "message": {
+                    "content": json.dumps(
+                        {
+                            "answer": "重试后成功。",
+                            "observations": [],
+                            "possible_causes": [],
+                            "recommended_actions": [],
+                            "evidence": [],
+                        },
+                        ensure_ascii=False,
+                    )
+                }
+            }
+        ]
+    }
+    calls = {"count": 0}
+
+    def flaky_transport(request, timeout):
+        calls["count"] += 1
+        if calls["count"] == 1:
+            raise urllib.error.URLError("ssl eof")
+        return _FakeResponse(payload)
+
+    client = OpenAICompatibleLLMClient(
+        api_key="test",
+        max_retries=1,
+        transport=flaky_transport,
+    )
+
+    insight = client.generate_insight(
+        "GMV情况如何",
+        QueryPlan(question="GMV情况如何", question_type="fact", metric="gmv"),
+        QueryResult(sql="select 1 as gmv", rows=[{"gmv": 1}]),
+    )
+
+    assert calls["count"] == 2
+    assert insight.answer == "重试后成功。"
 
 
 def test_plan_with_optional_llm_uses_valid_semantic_objects():

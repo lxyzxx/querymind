@@ -20,6 +20,7 @@ def create_llm_client_from_env() -> Optional[LLMClient]:
             model=os.getenv("QUERYMIND_LLM_MODEL", "deepseek-chat"),
             max_tokens=int(os.getenv("QUERYMIND_LLM_MAX_TOKENS", "2048")),
             timeout=int(os.getenv("QUERYMIND_LLM_TIMEOUT", "60")),
+            max_retries=int(os.getenv("QUERYMIND_LLM_MAX_RETRIES", "2")),
         )
 
     if provider == "anthropic":

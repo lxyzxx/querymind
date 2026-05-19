@@ -206,6 +206,14 @@ python3 querymind/example/run_pg_flow.py \
 LLM 只能生成结构化 QueryPlan 和自然语言 insight；`QueryPlan -> SQL` 仍由
 语义层确定性编译，并继续经过 SQL Guard。
 
+如果看到 `SSL: UNEXPECTED_EOF_WHILE_READING`，通常是 LLM API 的临时网络/TLS
+连接中断。QueryMind 会自动重试，重试仍失败时会回退到确定性 QueryPlan 或
+insight。可以在 `.env` 中调大重试次数：
+
+```env
+QUERYMIND_LLM_MAX_RETRIES=3
+```
+
 连接真实数据库前，请先修改
 [semantic_layer.yaml](querymind/example/semantic_layer.yaml)，让物理表名和字段
 表达式匹配你的数据仓库。

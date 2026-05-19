@@ -1,4 +1,6 @@
 import json
+import time
+import urllib.error
 import urllib.request
 from typing import Any, Dict, Optional
 
@@ -15,6 +17,7 @@ class OpenAICompatibleLLMClient:
         model: str = "deepseek-chat",
         max_tokens: int = 2048,
         timeout: int = 60,
+        max_retries: int = 2,
         transport: Any = None,
     ) -> None:
         if not api_key:
@@ -24,6 +27,7 @@ class OpenAICompatibleLLMClient:
         self._model = model
         self._max_tokens = max_tokens
         self._timeout = timeout
+        self._max_retries = max(0, int(max_retries))
         self._transport = transport or urllib.request.urlopen
 
     def generate_query_plan(self, question: str, semantic_context: str) -> QueryPlan:
@@ -119,11 +123,23 @@ class OpenAICompatibleLLMClient:
             },
             method="POST",
         )
-        with self._transport(request, timeout=self._timeout) as response:
-            raw = response.read().decode("utf-8")
+        raw = self._post_with_retries(request)
         payload = json.loads(raw)
         content = payload["choices"][0]["message"]["content"]
         return json.loads(_json_object_text(content))
+
+    def _post_with_retries(self, request: urllib.request.Request) -> str:
+        last_error: Optional[Exception] = None
+        for attempt in range(self._max_retries + 1):
+            try:
+                with self._transport(request, timeout=self._timeout) as response:
+                    return response.read().decode("utf-8")
+            except (TimeoutError, OSError, urllib.error.URLError) as exc:
+                last_error = exc
+                if attempt >= self._max_retries:
+                    break
+                time.sleep(0.5 * (attempt + 1))
+        raise RuntimeError(f"LLM request failed after {self._max_retries + 1} attempts: {last_error}")
 
 
 def _json_object_text(value: str) -> str:
