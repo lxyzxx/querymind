@@ -8,7 +8,9 @@ from querymind.core import (
     QueryPlan,
     QueryResult,
     build_month_over_month_sql,
+    build_recent_7_days_sql,
     can_build_comparison_query,
+    can_build_trend_query,
     generate_basic_insight,
     generate_comparison_insight,
     generate_insight_with_optional_llm,
@@ -153,6 +155,8 @@ def analyze_pg_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
 
     if can_build_comparison_query(plan):
         sql = build_month_over_month_sql(layer, plan)
+    elif can_build_trend_query(plan):
+        sql = build_recent_7_days_sql(layer, plan)
     else:
         sql = layer.build_metric_query(
             metric_name=plan.metric,

@@ -36,8 +36,63 @@ questions:
     semantic_request:
       metric: gmv
       dimensions: []
-      named_filters: [paid_only]
+      named_filters: []
       limit: 20
     expected_sql: >
-      SELECT sum(amount) AS gmv FROM public.querymind_demo_orders
-      WHERE (status = 'paid') LIMIT 20
+      SELECT sum(case when status = 'paid' then amount else 0 end) AS gmv
+      FROM public.querymind_demo_orders LIMIT 20
+
+  - id: gmv_by_channel
+    question: 哪个渠道GMV最高
+    semantic_request:
+      metric: gmv
+      dimensions: [channel]
+      named_filters: []
+      limit: 20
+    expected_sql: >
+      SELECT channel AS channel, sum(case when status = 'paid' then amount else 0 end) AS gmv
+      FROM public.querymind_demo_orders GROUP BY channel ORDER BY gmv DESC LIMIT 20
+
+  - id: total_order_count
+    question: 订单数情况如何
+    semantic_request:
+      metric: order_count
+      dimensions: []
+      named_filters: []
+      limit: 20
+    expected_sql: >
+      SELECT sum(case when status = 'paid' then 1 else 0 end) AS order_count
+      FROM public.querymind_demo_orders LIMIT 20
+
+  - id: avg_order_value
+    question: 客单价情况如何
+    semantic_request:
+      metric: avg_order_value
+      dimensions: []
+      named_filters: []
+      limit: 20
+    expected_sql: >
+      SELECT avg(case when status = 'paid' then amount end) AS avg_order_value
+      FROM public.querymind_demo_orders LIMIT 20
+
+  - id: refund_metrics
+    question: 退款金额和退款率
+    semantic_request:
+      metric: refund_amount
+      dimensions: []
+      named_filters: []
+      limit: 20
+    expected_sql: >
+      SELECT sum(case when status = 'refunded' then amount else 0 end) AS refund_amount
+      FROM public.querymind_demo_orders LIMIT 20
+
+  - id: conversion_rate
+    question: 转化率情况如何
+    semantic_request:
+      metric: conversion_rate
+      dimensions: []
+      named_filters: []
+      limit: 20
+    expected_sql: >
+      SELECT avg(case when converted then 1.0 else 0.0 end) AS conversion_rate
+      FROM public.querymind_demo_sessions LIMIT 20

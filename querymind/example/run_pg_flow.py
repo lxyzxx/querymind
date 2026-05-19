@@ -11,6 +11,7 @@ if str(ROOT) not in sys.path:
 
 
 DEMO_ORDERS_TABLE = "public.querymind_demo_orders"
+DEMO_SESSIONS_TABLE = "public.querymind_demo_sessions"
 DEMO_USERS_TABLE = "public.querymind_demo_users"
 
 
@@ -52,6 +53,18 @@ def setup_demo_data(pg_config: Dict[str, Any]) -> None:
         (4, 1800, "paid", "organic", "2026-04-03 10:00:00"),
         (5, 700, "paid", "ads", "2026-04-10 11:00:00"),
         (6, 500, "paid", "referral", "2026-04-22 09:30:00"),
+        (7, 900, "paid", "organic", "2026-05-13 10:00:00"),
+        (8, 1100, "paid", "ads", "2026-05-15 11:00:00"),
+        (9, 600, "paid", "referral", "2026-05-18 09:30:00"),
+        (10, 400, "refunded", "ads", "2026-05-18 14:00:00"),
+    ]
+    session_rows = [
+        (1, "organic", True, "2026-05-13 09:00:00"),
+        (2, "organic", False, "2026-05-13 09:30:00"),
+        (3, "ads", True, "2026-05-14 10:00:00"),
+        (4, "ads", False, "2026-05-14 10:30:00"),
+        (5, "ads", False, "2026-05-15 10:30:00"),
+        (6, "referral", True, "2026-05-18 11:00:00"),
     ]
     with psycopg2.connect(**pg_config) as conn:
         conn.autocommit = True
@@ -100,6 +113,28 @@ def setup_demo_data(pg_config: Dict[str, Any]) -> None:
                 """,
                 order_rows,
             )
+            cursor.execute(
+                f"""
+                create table if not exists {DEMO_SESSIONS_TABLE} (
+                    id integer primary key,
+                    channel text not null,
+                    converted boolean not null,
+                    created_at timestamp not null
+                )
+                """
+            )
+            cursor.execute(f"delete from {DEMO_SESSIONS_TABLE}")
+            cursor.executemany(
+                f"""
+                insert into {DEMO_SESSIONS_TABLE} (id, channel, converted, created_at)
+                values (%s, %s, %s, %s)
+                on conflict (id) do update
+                set channel = excluded.channel,
+                    converted = excluded.converted,
+                    created_at = excluded.created_at
+                """,
+                session_rows,
+            )
 
 
 def run_flow(args: argparse.Namespace) -> Dict[str, Any]:
@@ -108,7 +143,9 @@ def run_flow(args: argparse.Namespace) -> Dict[str, Any]:
     from querymind.core import (
         QueryResult,
         build_month_over_month_sql,
+        build_recent_7_days_sql,
         can_build_comparison_query,
+        can_build_trend_query,
         generate_basic_insight,
         generate_comparison_insight,
         generate_insight_with_optional_llm,
@@ -145,6 +182,8 @@ def run_flow(args: argparse.Namespace) -> Dict[str, Any]:
 
     if can_build_comparison_query(plan):
         sql = build_month_over_month_sql(layer, plan)
+    elif can_build_trend_query(plan):
+        sql = build_recent_7_days_sql(layer, plan)
     else:
         sql = layer.build_metric_query(
             metric_name=plan.metric,

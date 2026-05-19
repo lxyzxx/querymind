@@ -71,3 +71,24 @@ def test_generate_basic_empty_result_insight():
 
     assert insight.answer == "没有查询到与 sales_amount 相关的数据。"
     assert insight.recommended_actions == ["确认筛选条件、时间范围和数据源是否正确。"]
+
+
+def test_generate_basic_trend_insight_summarizes_latest_change():
+    plan = QueryPlan(
+        question="最近7天GMV趋势如何？",
+        question_type="trend",
+        metric="gmv",
+        comparison="recent_7_days",
+    )
+    result = QueryResult(
+        sql="select date(created_at) as order_date, sum(amount) as gmv from orders",
+        rows=[
+            {"order_date": "2026-05-13", "gmv": 900},
+            {"order_date": "2026-05-18", "gmv": 600},
+        ],
+    )
+
+    insight = generate_basic_insight(plan, result)
+
+    assert "最新 2026-05-18 为 600" in insight.answer
+    assert "变化 -300" in insight.answer

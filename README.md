@@ -8,6 +8,9 @@ QueryMind 不是完整的 ChatBI 或 BI 平台。它不负责仪表盘、拖拽�
 配置或数据集管理，而是 ChatBI、数据问答助手、智能分析系统里的核心查询与
 分析链路。
 
+它是一个 governed NL2SQL demo，不是裸 Text-to-SQL：LLM 可以辅助理解问题
+和解释结果，但 SQL 只能由语义层确定性生成，并且必须经过 SQL Guard。
+
 ## 核心思路
 
 直接 Text-to-SQL 会让模型猜表名、字段名、过滤条件和指标口径。QueryMind
@@ -158,6 +161,19 @@ python3 querymind/example/run_pg_flow.py \
 python3 querymind/example/run_pg_flow.py \
   --setup-demo-data \
   "为什么上个月的销售额比上上个月的少，怎么优化？"
+```
+
+更多示例问题：
+
+```bash
+python3 querymind/example/run_pg_flow.py --setup-demo-data "GMV情况如何"
+python3 querymind/example/run_pg_flow.py --setup-demo-data "最近7天GMV趋势如何？"
+python3 querymind/example/run_pg_flow.py --setup-demo-data "哪个渠道GMV最高？"
+python3 querymind/example/run_pg_flow.py --setup-demo-data "订单数下降主要来自哪里？"
+python3 querymind/example/run_pg_flow.py --setup-demo-data "客单价为什么下降？"
+python3 querymind/example/run_pg_flow.py --setup-demo-data "退款金额情况如何？"
+python3 querymind/example/run_pg_flow.py --setup-demo-data "退款率情况如何？"
+python3 querymind/example/run_pg_flow.py --setup-demo-data "转化率情况如何？"
 ```
 
 默认情况下，QueryMind 用确定性规则生成 QueryPlan 和 insight。也可以打开

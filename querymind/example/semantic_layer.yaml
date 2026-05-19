@@ -45,19 +45,48 @@ tables:
         synonyms: [渠道, 来源]
     metrics:
       - name: gmv
-        expr: sum(amount)
+        expr: sum(case when status = 'paid' then amount else 0 end)
         description: Gross merchandise value.
         synonyms: [GMV, gmv, 销售额, 成交额, 交易额]
       - name: order_count
-        expr: count(*)
+        expr: sum(case when status = 'paid' then 1 else 0 end)
         description: Number of paid orders.
         synonyms: [订单数, 支付订单数, 成交订单数, orders]
       - name: avg_order_value
-        expr: avg(amount)
+        expr: avg(case when status = 'paid' then amount end)
         description: Average order value.
         synonyms: [客单价, 平均订单金额, AOV, aov]
+      - name: refund_amount
+        expr: sum(case when status = 'refunded' then amount else 0 end)
+        description: Refunded order amount.
+        synonyms: [退款金额, 退款额]
+      - name: refund_rate
+        expr: avg(case when status = 'refunded' then 1.0 else 0.0 end)
+        description: Share of orders that were refunded.
+        synonyms: [退款率, 退单率]
     filters:
       - name: paid_only
         expr: status = 'paid'
         description: Keep only paid orders.
         synonyms: [已支付, 支付订单, paid orders]
+  - name: sessions
+    physical_name: public.querymind_demo_sessions
+    description: Demo traffic sessions for conversion analysis.
+    dimensions:
+      - name: session_date
+        expr: date(created_at)
+        description: Session date.
+        synonyms: [访问日期, 日期]
+      - name: channel
+        expr: channel
+        description: Traffic channel.
+        synonyms: [渠道, 来源]
+    metrics:
+      - name: visitor_count
+        expr: count(*)
+        description: Number of demo sessions.
+        synonyms: [访问量, 访客数, 流量]
+      - name: conversion_rate
+        expr: avg(case when converted then 1.0 else 0.0 end)
+        description: Share of sessions that converted.
+        synonyms: [转化率, CVR, cvr]

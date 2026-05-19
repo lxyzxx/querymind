@@ -48,6 +48,49 @@ def test_basic_query_planner_matches_sales_drop_diagnosis():
     assert plan.needs_clarification is False
 
 
+def test_basic_query_planner_matches_recent_gmv_trend():
+    layer = SemanticLayer.from_file("querymind/example/semantic_layer.yaml")
+    planner = BasicQueryPlanner(layer)
+
+    plan = planner.plan("最近7天GMV趋势如何？", limit=20)
+
+    assert plan.metric == "gmv"
+    assert plan.question_type == "trend"
+    assert plan.comparison == "recent_7_days"
+
+
+def test_basic_query_planner_matches_gmv_channel_ranking():
+    layer = SemanticLayer.from_file("querymind/example/semantic_layer.yaml")
+    planner = BasicQueryPlanner(layer)
+
+    plan = planner.plan("哪个渠道GMV最高？", limit=20)
+
+    assert plan.metric == "gmv"
+    assert plan.question_type == "ranking"
+    assert plan.dimensions == ["channel"]
+
+
+def test_basic_query_planner_matches_order_count_drop():
+    layer = SemanticLayer.from_file("querymind/example/semantic_layer.yaml")
+    planner = BasicQueryPlanner(layer)
+
+    plan = planner.plan("订单数下降主要来自哪里？", limit=20)
+
+    assert plan.metric == "order_count"
+    assert plan.question_type == "diagnosis"
+    assert plan.comparison == "month_over_month"
+    assert plan.breakdowns == ["channel"]
+
+
+def test_basic_query_planner_matches_refund_and_conversion_metrics():
+    layer = SemanticLayer.from_file("querymind/example/semantic_layer.yaml")
+    planner = BasicQueryPlanner(layer)
+
+    assert planner.plan("退款金额情况如何？").metric == "refund_amount"
+    assert planner.plan("退款率情况如何？").metric == "refund_rate"
+    assert planner.plan("转化率情况如何？").metric == "conversion_rate"
+
+
 def test_basic_query_planner_does_not_fallback_to_first_metric():
     layer = SemanticLayer.from_file("querymind/example/semantic_layer.yaml")
     planner = BasicQueryPlanner(layer)

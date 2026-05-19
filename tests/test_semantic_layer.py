@@ -128,4 +128,4 @@ def test_golden_question_evaluation_passes_demo_file():
     results = evaluate_golden_questions(layer, questions)
     summary = summarize_results(results)
 
-    assert summary == {"total": 4, "passed": 4, "failed": 0, "pass_rate": 1.0}
+    assert summary == {"total": 9, "passed": 9, "failed": 0, "pass_rate": 1.0}

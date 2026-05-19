@@ -102,9 +102,14 @@ def _question_type(text: str) -> str:
 
 def _comparison(text: str) -> Optional[str]:
     lowered = text.lower()
+    if "最近7天" in lowered or "近7天" in lowered or "last 7 days" in lowered:
+        return "recent_7_days"
     if (
         ("上个月" in lowered and "上上个月" in lowered)
         or "环比" in lowered
+        or "下降" in lowered
+        or "减少" in lowered
+        or "少了" in lowered
         or "month over month" in lowered
         or "mom" in lowered
     ):
@@ -113,6 +118,11 @@ def _comparison(text: str) -> Optional[str]:
 
 
 def _default_breakdowns(text: str, table: Any, question_type: str) -> List[str]:
+    if question_type == "trend":
+        for candidate in ("order_date", "session_date", "signup_date"):
+            if any(dimension.name == candidate for dimension in table.dimensions):
+                return []
+
     if question_type != "diagnosis":
         return []
 

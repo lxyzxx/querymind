@@ -68,6 +68,16 @@ def _answer(
         return f"已查询到 {result.row_count} 行结果，但没有识别出单一的 {plan.metric} 指标值。"
 
     _, value = metric_value
+    if plan.question_type == "trend":
+        trend = _trend_values(plan, result)
+        if trend is not None:
+            first_label, first_value, last_label, last_value = trend
+            delta = last_value - first_value
+            return (
+                f"{plan.metric} 最近趋势返回 {result.row_count} 个时间点，"
+                f"最新 {last_label} 为 {_fmt_number(last_value)}，"
+                f"较 {first_label} 变化 {_fmt_number(delta)}。"
+            )
     if plan.question_type == "ranking":
         leader = _dimension_label(plan, result.rows[0])
         if leader:
@@ -89,6 +99,13 @@ def _observations(
         observations.append(f"已应用命名过滤器：{', '.join(plan.named_filters)}。")
     if plan.comparison:
         observations.append(f"对比口径：{plan.comparison}。")
+    if plan.question_type == "trend":
+        trend = _trend_values(plan, result)
+        if trend is not None:
+            first_label, first_value, last_label, last_value = trend
+            observations.append(
+                f"趋势从 {first_label} 的 {_fmt_number(first_value)} 变化到 {last_label} 的 {_fmt_number(last_value)}。"
+            )
     if plan.question_type in {"ranking", "diagnosis"} and result.rows:
         label = _dimension_label(plan, result.rows[0])
         if label:
@@ -141,3 +158,30 @@ def _dimension_label(plan: QueryPlan, row: Dict[str, Any]) -> Optional[str]:
         if breakdown in row:
             return f"{breakdown}={row[breakdown]}"
     return None
+
+
+def _trend_values(plan: QueryPlan, result: QueryResult) -> Optional[Tuple[str, float, str, float]]:
+    if not result.rows:
+        return None
+    first = result.rows[0]
+    last = result.rows[-1]
+    first_metric = _first_metric_value(plan.metric, first)
+    last_metric = _first_metric_value(plan.metric, last)
+    if first_metric is None or last_metric is None:
+        return None
+    first_label = _first_label(first)
+    last_label = _first_label(last)
+    if first_label is None or last_label is None:
+        return None
+    return first_label, float(first_metric[1]), last_label, float(last_metric[1])
+
+
+def _first_label(row: Dict[str, Any]) -> Optional[str]:
+    for value in row.values():
+        if not isinstance(value, (int, float)) or isinstance(value, bool):
+            return str(value)
+    return None
+
+
+def _fmt_number(value: float) -> str:
+    return str(int(value)) if float(value).is_integer() else f"{value:.2f}"
