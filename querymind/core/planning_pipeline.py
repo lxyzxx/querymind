@@ -34,11 +34,13 @@ def plan_with_optional_llm(
                 error="LLM is not configured.",
             )
 
-        plan = client.generate_query_plan(question, semantic_layer.prompt_context())
+        plan = _normalize_llm_plan(client.generate_query_plan(question, semantic_layer.prompt_context()))
         if limit is not None and plan.limit is None:
             raw = plan.to_dict()
             raw["limit"] = limit
             plan = QueryPlan.from_dict(raw)
+        if plan.needs_clarification and not basic_plan.needs_clarification:
+            plan = _prefer_executable_basic_plan(plan, basic_plan)
         _validate_plan_against_semantic_layer(semantic_layer, plan)
         return PlanGeneration(plan=plan, source="llm")
     except Exception as exc:
@@ -59,3 +61,35 @@ def _validate_plan_against_semantic_layer(semantic_layer: Any, plan: QueryPlan) 
         semantic_layer._find_dimension(table, breakdown)
     for named_filter in plan.named_filters:
         semantic_layer._find_filter(table, named_filter)
+
+
+def _normalize_llm_plan(plan: QueryPlan) -> QueryPlan:
+    raw = plan.to_dict()
+    raw["comparison"] = _normalize_comparison(raw.get("comparison"))
+    raw["filters"] = raw.get("filters") or {}
+    raw["dimensions"] = raw.get("dimensions") or []
+    raw["named_filters"] = raw.get("named_filters") or []
+    raw["breakdowns"] = raw.get("breakdowns") or []
+    return QueryPlan.from_dict(raw)
+
+
+def _normalize_comparison(value: Any) -> Optional[str]:
+    if value is None:
+        return None
+    if isinstance(value, dict):
+        text = " ".join(str(item).lower() for item in value.values())
+    else:
+        text = str(value).strip().lower()
+    if not text:
+        return None
+    if "recent_7" in text or "last 7" in text or "7_days" in text:
+        return "recent_7_days"
+    if "month_over_month" in text or "period_over_period" in text or "month" in text or "mom" in text:
+        return "month_over_month"
+    return text
+
+
+def _prefer_executable_basic_plan(llm_plan: QueryPlan, basic_plan: QueryPlan) -> QueryPlan:
+    raw = basic_plan.to_dict()
+    raw["question"] = llm_plan.question or basic_plan.question
+    return QueryPlan.from_dict(raw)

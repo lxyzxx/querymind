@@ -1,3 +1,5 @@
+from datetime import date
+
 import pytest
 
 from querymind.core import Insight, InsightEvidence, QueryPlan, QueryResult
@@ -32,6 +34,12 @@ def test_query_result_sets_row_count():
 
     assert result.row_count == 1
     assert result.to_dict()["rows"] == [{"sales_amount": 100}]
+
+
+def test_query_result_serializes_dates_for_llm_payloads():
+    result = QueryResult(sql="select current_date as d", rows=[{"d": date(2026, 5, 19)}])
+
+    assert result.to_dict()["rows"] == [{"d": "2026-05-19"}]
 
 
 def test_insight_requires_traceable_answer():

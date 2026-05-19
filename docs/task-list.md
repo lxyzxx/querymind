@@ -52,6 +52,9 @@
 - [x] 扩展业务问法：最近 7 天 GMV 趋势、渠道 GMV 排名、订单数下降来源、客单价下降、退款和转化率查询。
 - [x] 为新增指标和问法补充 golden questions、planner/API 单测和真实 PostgreSQL 集成测试。
 - [x] 增加 `.env.example` 和本地 `.env` 加载逻辑，用于配置 PostgreSQL 和真实 LLM key。
+- [x] 用真实 LLM API 验证 QueryPlan 和 insight 链路：销售额下降诊断、最近 7 天趋势、渠道排行均可进入语义层 SQL 链路。
+- [x] 收紧 LLM QueryPlan prompt，并规范化 comparison 输出，避免 LLM 把可执行问题错误转成澄清问题。
+- [x] 修复 QueryResult 日期序列化，保证包含日期的趋势结果可以传给 LLM 生成 insight。
 - [x] 单元测试覆盖语义层、SQL Guard、评测、核心结构、QueryPlan、Insight、LLM contract 和 Server API。
 - [x] README 快速开始和项目结构说明。
 - [x] 架构说明和路线图：`docs/architecture.md`。
@@ -65,7 +68,7 @@
 - [ ] 明确 Anthropic 适配器是否作为正式支持路径，或仅保留为可选示例。
 - [ ] 为 `/analyze-pg` 增加更清晰的错误返回，区分语义层错误、SQL Guard 错误和数据库连接错误。
 - [ ] 增加更多覆盖完整 PostgreSQL 链路的回归用例或集成测试。
-- [ ] 用真实 LLM API 做手工验收，确认 LLM 生成的 QueryPlan 和 insight 足够稳定。
+- [ ] 继续扩充真实 LLM 手工验收样例，沉淀为 LLM-in-the-loop 回归集。
 - [ ] 扩展诊断类问题：同比、最近 N 天以外的任意窗口、商品/地区/新老客拆解、多指标联动分析。
 
 ## 未完成

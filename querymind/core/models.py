@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from datetime import date, datetime
 from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 
@@ -96,7 +97,7 @@ class QueryResult:
         return {
             "sql": self.sql,
             "row_count": self.row_count,
-            "rows": [dict(row) for row in self.rows],
+            "rows": [{key: _json_safe(value) for key, value in row.items()} for row in self.rows],
         }
 
 
@@ -168,3 +169,9 @@ def _optional_int(value: Any) -> Optional[int]:
     if value is None or value == "":
         return None
     return int(value)
+
+
+def _json_safe(value: Any) -> Any:
+    if isinstance(value, (date, datetime)):
+        return value.isoformat()
+    return value

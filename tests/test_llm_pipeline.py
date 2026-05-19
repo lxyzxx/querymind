@@ -49,6 +49,24 @@ class _BadPlannerClient:
         return Insight(answer="bad")
 
 
+class _ClarifyingPlannerClient:
+    def generate_query_plan(self, question, semantic_context):
+        return QueryPlan(
+            question=question,
+            question_type="comparison",
+            metric="gmv",
+            dimensions=["order_date"],
+            comparison={"type": "period_over_period", "period": "month"},
+            breakdowns=["channel"],
+            limit=50,
+            needs_clarification=True,
+            clarification_question="是否需要按渠道拆解？",
+        )
+
+    def generate_insight(self, question, plan, result):
+        return Insight(answer="clarifying")
+
+
 def test_openai_compatible_client_generates_insight_from_json_response():
     payload = {
         "choices": [
@@ -113,6 +131,24 @@ def test_plan_with_optional_llm_falls_back_when_metric_is_not_in_semantic_layer(
     assert generation.source == "deterministic_fallback"
     assert generation.plan.metric == "gmv"
     assert "Unknown semantic metric" in generation.error
+
+
+def test_plan_with_optional_llm_uses_basic_plan_when_llm_clarifies_unnecessarily():
+    layer = SemanticLayer.from_file("querymind/example/semantic_layer.yaml")
+
+    generation = plan_with_optional_llm(
+        layer,
+        "为什么上个月的销售额比上上个月的少，怎么优化？",
+        limit=20,
+        use_llm=True,
+        llm_client=_ClarifyingPlannerClient(),
+    )
+
+    assert generation.source == "llm"
+    assert generation.plan.needs_clarification is False
+    assert generation.plan.metric == "gmv"
+    assert generation.plan.comparison == "month_over_month"
+    assert generation.plan.breakdowns == ["channel"]
 
 
 def test_generate_insight_with_optional_llm_falls_back_without_client(monkeypatch):

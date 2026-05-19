@@ -28,9 +28,37 @@ class OpenAICompatibleLLMClient:
 
     def generate_query_plan(self, question: str, semantic_context: str) -> QueryPlan:
         prompt = (
-            "只返回 JSON，不要 Markdown。JSON 必须符合 QueryPlan 字段：question, "
-            "question_type, metric, dimensions, filters, named_filters, comparison, "
-            "breakdowns, limit, needs_clarification, clarification_question。\n\n"
+            "你是 QueryMind 的 QueryPlan 生成器。只返回 JSON，不要 Markdown。\n"
+            "SQL 不是你生成的，SQL 会由语义层编译器生成。你的任务只是从语义层中选择合法对象。\n\n"
+            "JSON 必须包含字段：question, question_type, metric, dimensions, filters, "
+            "named_filters, comparison, breakdowns, limit, needs_clarification, clarification_question。\n"
+            "字段约束：\n"
+            "- question_type 只能是 fact, ranking, trend, comparison, diagnosis, suggestion。\n"
+            "- metric 必须使用语义层 metrics.name 中的规范名称，不要使用同义词。\n"
+            "- dimensions 和 breakdowns 必须使用语义层 dimensions.name 中的规范名称。\n"
+            "- named_filters 必须使用语义层 filters.name 中的规范名称。\n"
+            "- comparison 只能是 null, month_over_month, recent_7_days。\n"
+            "- filters 必须是 JSON object；没有筛选条件时用 {}。\n"
+            "- dimensions, named_filters, breakdowns 必须是 JSON array；没有时用 []。\n"
+            "- 如果语义层中存在可匹配指标，不要因为缺少更细拆解而 needs_clarification。\n"
+            "- 对“上个月比上上个月少/下降/减少/环比”使用 question_type=diagnosis, comparison=month_over_month。\n"
+            "- 对销售额/GMV 使用 metric=gmv；对订单数使用 metric=order_count；对客单价使用 metric=avg_order_value。\n"
+            "- 对下降原因类问题，如语义层有 channel 维度，breakdowns 使用 [\"channel\"]。\n"
+            "- 对“最近7天...趋势”使用 question_type=trend, comparison=recent_7_days。\n\n"
+            "示例：\n"
+            "{\n"
+            '  "question": "为什么上个月的销售额比上上个月的少，怎么优化？",\n'
+            '  "question_type": "diagnosis",\n'
+            '  "metric": "gmv",\n'
+            '  "dimensions": [],\n'
+            '  "filters": {},\n'
+            '  "named_filters": [],\n'
+            '  "comparison": "month_over_month",\n'
+            '  "breakdowns": ["channel"],\n'
+            '  "limit": 20,\n'
+            '  "needs_clarification": false,\n'
+            '  "clarification_question": null\n'
+            "}\n\n"
             f"语义层:\n{semantic_context}\n\n问题:\n{question}"
         )
         payload = self._complete_json(prompt)
